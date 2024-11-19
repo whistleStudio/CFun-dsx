@@ -8,6 +8,28 @@ export function activate (context: vscode.ExtensionContext) {
 		opSerialport.selectSp()
 	});
 
+	/* 上传程序 */
+	const uploadFile = vscode.commands.registerCommand("cfdsx.uploadFile", (uri) => {
+		opSerialport.uploadFile(uri)
+	})
 
-	context.subscriptions.push(selectSp)
+	/* test */
+	const helloWorld = vscode.commands.registerCommand("cfdsx.helloWorld", () => {
+		vscode.window.withProgress(
+			{
+				location: vscode.ProgressLocation.Notification,
+				title: 'Finding ...',
+				cancellable: false,
+			},
+			async (progress, token) => {
+			  for (let i = 0; i < 10; i++) {
+				  setTimeout(() => {
+				  	progress.report({ increment: i*10, message: "xxxxx" })
+				  }, 10000)
+				}
+		 	}
+		)
+	})
+
+	context.subscriptions.push(selectSp, helloWorld)
 } 

@@ -28,6 +28,10 @@
           "light": "./src/img/connect-light.png",
           "dark": "./src/img/connect-dark.png"
         }
+      }, 
+      {
+        "command": "cfdsx.uploadFile",
+        "title": "上传程序(dsx)"
       }
     ],
     "menus": {
@@ -35,6 +39,13 @@
         {
           "when": "resourceLangId == python",
           "command": "cfdsx.selectSp",
+          "group": "navigation@1"
+        }
+      ],
+      "editor/context": [
+        {
+          "when": "resourceLangId == python && editorFocus",
+          "command": "cfdsx.uploadFile",
           "group": "navigation@1"
         }
       ]
