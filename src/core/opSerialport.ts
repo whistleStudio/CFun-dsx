@@ -1,7 +1,5 @@
 import { SerialPort } from "serialport";
 import * as vscode from "vscode"
-import * as fs from "fs"
-import { error } from "console";
 
 interface DSX {
   com: string,
@@ -32,10 +30,12 @@ export default {
     portInfo = portInfo.filter(v => v.serialNumber)
     console.log(portInfo)
     let portList = portInfo.map(v => v.path)
+    // 搜索框下拉弹出菜单
     const quickPick = vscode.window.createQuickPick()
     console.log("isOpen:", dsx.sp?.isOpen)
     quickPick.placeholder = portList.length>0 ? "👇点击目标串口👇 " : "🔍未检测可用串口🔍"
 		quickPick.items = portList.map(v => ({label: v == dsx.com ? v+" ✔️": v, description: v}));
+    // 选择时回调
 		quickPick.onDidChangeSelection(e => {
 			console.log("onDidChangeSelection", e)
       let isNewConnect = false
@@ -58,67 +58,21 @@ export default {
             })
           }, 100)
           // 监听：异常
-          dsx.sp.on("error", () => {
+          dsx.sp.on("error", err => {
             console.log("error")
             dsx.reset()
-            vscode.window.showInformationMessage("设备已断开")
+            vscode.window.showErrorMessage(`设备检测异常: ${err}`)
           })
           vscode.window.showInformationMessage("设备连接成功")
         } else vscode.window.showInformationMessage("设备已断开")
-      } catch (e) {console.log("connect err:", e)}
+      } catch (e) {vscode.window.showErrorMessage(`设备检测异常: ${e}`)}
 			quickPick.dispose()
 		})
 		quickPick.onDidHide(() => quickPick.dispose())
 		quickPick.show()
   },
   
-  /* 2. 在线模式repl */
-  enterRepl: async () => {
-    const portInfo = await SerialPort.list();
-    let portList = portInfo.filter(v => v.serialNumber).map(v => v.path)
-    if (dsx.com) {
-			if (portList.indexOf(dsx.com) >= 0) {
-        vscode.window.showInformationMessage("Repl模式开启")
-        const terList = vscode.window.terminals
-        // 是否已开启过串口终端
-        let isOpen = false
-        let ter: vscode.Terminal | undefined
-        terList.forEach(t => {
-          if (t.name == dsx.com) {
-            isOpen = true
-            ter = t
-          }
-        })
-        if (!isOpen)  ter = vscode.window.createTerminal(dsx.com)
-        else {ter?.sendText(`\x1d`);ter?.sendText(`cls`)} // 未退出repl情况下再次开启
-        if (ter) {
-          ter.show(true)
-          ter.sendText(`terminal-s -p ${dsx.com} -b ${dsx.BAUDRATE}`)
-          setTimeout(()=>{
-            ter?.sendText(`\x03`)
-          }, 2200)
-        }            
-			} else {vscode.window.showErrorMessage("设备已断开")}
-		} else {vscode.window.showErrorMessage("请先连接串口")}
-  },
-
-  /* 3. 设备重启 */
-  reboot: () => {
-    const sp = new SerialPort(
-      {path: dsx.com, baudRate: dsx.BAUDRATE, dataBits: 8, stopBits: 1, parity: "none"},
-      err => {
-        if (!err) {
-          setTimeout(() => {
-            sp.write(Buffer.from([0x03, 0x04, 0x1d]), err => {
-              sp.close()
-            })
-          }, 500)          
-        } else vscode.window.showErrorMessage("程序加载异常: 串口占用(需退出Repl模式)")
-      }
-    )
-  },
-
-  /* 上传文件 */
+  /* 2. 上传文件 */
   uploadFile: async (fileUri: string) => {
     console.log("pass parm", fileUri)
     let editor = vscode.window.activeTextEditor
@@ -130,23 +84,43 @@ export default {
           let codeArr = activeText.split("\n")
           const uploadStep = 100 / codeArr.length
           console.log("#Upload start")
-
-          await dsx.sp.write(new Uint8Array([3, 7]).buffer)
-          await msDelay(3000)
-          await dsx.sp.write(new TextEncoder().encode("#\n")) // 智能主控需要
-          await msDelay(10)
-          for (let v of codeArr) {
-            let lineU8Code = new TextEncoder().encode(v+"\n")
-            await dsx.sp.write(lineU8Code.buffer)
-            await msDelay(10)
-            // this.curPercent = parseInt(this.curPercent + uploadStep)
-            // updatePercent(this.curPercent)
-          }
-          await dsx.sp.write(new Uint8Array([170, 102]).buffer)
-          await msDelay(80)
-          console.log("#Upload over")  
-        } catch (e) {console.log("upload err:", e)}
-      }
+          // vscode动态消息提示
+          vscode.window.withProgress(
+            {
+              location: vscode.ProgressLocation.Notification,
+              title: '',
+              cancellable: false,
+            },
+            async (progress, token) => {
+              // 上传开始
+              progress.report({increment: 1, message: `上传中...: 0%`})
+              dsx.sp?.write(Buffer.from(new Uint8Array([3, 7])))
+              await msDelay(3000)
+              dsx.sp?.write(Buffer.from(new TextEncoder().encode("#\n"))) // 智能主控需要
+              await msDelay(10)
+              // 上传过程
+              let prog = 0
+              for (let v of codeArr) {
+                if (dsx.sp) {
+                  let lineU8Code = new TextEncoder().encode(v+"\n")
+                  dsx.sp.write(Buffer.from(lineU8Code))
+                  prog += uploadStep
+                  progress.report({increment: uploadStep, message: `上传中...: ${prog}%`})
+                  await msDelay(10)
+                }  
+              }
+              // 上传结束
+              if (prog + uploadStep >= 100) {
+                dsx.sp?.write(Buffer.from(new Uint8Array([170, 102])))
+                await msDelay(80)
+                progress.report({increment: uploadStep, message: "上传中...: 100%"})
+                vscode.window.showInformationMessage("上传完成 🎉")
+              } else vscode.window.showInformationMessage("上传失败 ⚠️")
+              await msDelay(20)
+            }
+          ) 
+        } catch (e) {vscode.window.showErrorMessage(`设备检测异常: ${e}`)}
+      } else vscode.window.showInformationMessage("未检测到串口设备")
     } 
   },
 
