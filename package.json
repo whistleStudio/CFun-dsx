@@ -3,6 +3,7 @@
   "displayName": "cfdsx",
   "description": "an extension for cfdsx programming in vscode",
   "version": "0.0.1",
+  "publisher": "WhistleWang",
   "icon": "./src/img/cfdsx-icon.png",
   "engines": {
     "vscode": "^1.95.0"
