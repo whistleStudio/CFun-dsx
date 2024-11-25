@@ -1,0 +1,28 @@
+{
+  "float2gbk": {
+    "prefix": "float2gbk",
+    "body": [
+      "def float2gbk(txt):",
+        "\ttxt = str(txt)",
+        "\ttext = '20'",
+        "\tflag = False",
+        "\tcount = 0",
+        "\tfor i in txt :",
+          "\t\tif i == '.':",
+            "\t\t\ttext += '2E'",
+            "\t\t\tflag = True",
+          "\t\telif i == '-':",
+            "\t\t\ttext += '2D'",
+          "\t\telse:",
+            "\t\t\tif flag:",
+              "\t\t\t\tcount += 1",
+            "\t\t\ttext += str(int(i)+30)",
+          "\t\tif count == 2:",
+            "\t\t\tbreak",
+        "\treturn text",
+      "$0"
+    ],
+    "description": "浮点数转GBK编码格式字符串; 用于语音合成播放变量"
+  }
+
+}

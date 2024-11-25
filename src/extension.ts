@@ -1,8 +1,20 @@
 import * as vscode from 'vscode'
-import {exec} from "child_process"
 import opSerialport from './core/opSerialport'
+import setupDsx from './core/setupDsx'
 
 export function activate (context: vscode.ExtensionContext) {
+	// 只执行一次, 默认安装相关py包 pip install ./src/pyblib/pyb-0.0.0-py3-none-any.whl
+	setupDsx.setup(context)
+	/* 1. 安装machine库 */
+	const installMachine = vscode.commands.registerCommand("cfdsx.installMachine", () => {
+		setupDsx.installMachine(context, true)
+	})
+
+	/* 手动初始化 */
+	const setup = vscode.commands.registerCommand("cfdsx.setup", () => {
+		setupDsx.setup(context)
+	})
+
 	/* 2. 串口选择 */
 	const selectSp = vscode.commands.registerCommand('cfdsx.selectSp', () => {
 		opSerialport.selectSp()
@@ -33,7 +45,7 @@ export function activate (context: vscode.ExtensionContext) {
 		)
 	})
 
-	context.subscriptions.push(selectSp, uploadFile, helloWorld)
+	context.subscriptions.push(selectSp, uploadFile, installMachine, setup, helloWorld)
 } 
 
 /* ---------------------- */

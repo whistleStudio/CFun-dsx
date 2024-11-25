@@ -3,6 +3,7 @@
   "displayName": "cfdsx",
   "description": "an extension for cfdsx programming in vscode",
   "version": "0.0.1",
+  "icon": "./src/img/cfdsx-icon.png",
   "engines": {
     "vscode": "^1.95.0"
   },
@@ -32,6 +33,14 @@
       {
         "command": "cfdsx.uploadFile",
         "title": "上传程序(dsx)"
+      },
+      {
+        "command": "cfdsx.installMachine",
+        "title": "更新machine(dsx)库"
+      },
+      {
+        "command": "cfdsx.setup",
+        "title": "初始化cfdsx扩展"
       }
     ],
     "menus": {
@@ -49,7 +58,13 @@
           "group": "navigation@1"
         }
       ]
-    }
+    },
+    "snippets": [
+      {
+        "language": "python",
+        "path": "./src/snippets/py_snip.json"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
