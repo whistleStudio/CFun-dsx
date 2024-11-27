@@ -1,6 +1,10 @@
 import * as vscode from 'vscode'
 import opSerialport from './core/opSerialport'
 import setupDsx from './core/setupDsx'
+import {exec} from "child_process"
+import { toc } from './examples/toc';
+import { ExampleTreeDataProvider, openExampleDoc } from './core/exampleTreeDataProvider';
+
 
 export function activate (context: vscode.ExtensionContext) {
 	// 只执行一次, 默认安装相关py包 pip install ./src/pyblib/pyb-0.0.0-py3-none-any.whl
@@ -25,6 +29,21 @@ export function activate (context: vscode.ExtensionContext) {
 		opSerialport.uploadFile(uri)
 	})
 
+	/* 4. 打开接口文档 */
+	const openApiDoc = vscode.commands.registerCommand("cfdsx.openApiDoc", () => {
+		exec("start https://dict.cfunworld.com/apidoc/cfdsx/")
+	})
+
+	/* 5. 打开示例 */
+	// 侧边栏注册
+	for (let i in toc) {
+		vscode.window.registerTreeDataProvider(i, new ExampleTreeDataProvider(context, i))
+	}
+
+	vscode.commands.registerCommand("cfdsx.openExample", (item: vscode.TreeItem) => {
+		openExampleDoc(item)
+	} )
+
 	/* !!!test!!! */
 	const helloWorld = vscode.commands.registerCommand("cfdsx.helloWorld", () => {
 		vscode.window.withProgress(
@@ -45,7 +64,8 @@ export function activate (context: vscode.ExtensionContext) {
 		)
 	})
 
-	context.subscriptions.push(selectSp, uploadFile, installMachine, setup, helloWorld)
+	context.subscriptions.push(selectSp, uploadFile, installMachine, setup, 
+		openApiDoc, helloWorld)
 } 
 
 /* ---------------------- */

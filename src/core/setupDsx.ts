@@ -21,10 +21,13 @@ export default {
           console.log(error)
           vscode.window.showErrorMessage(`脚本运行错误\nerr:${error}`)
         } else {
-          const re = /Successfully\s*installed\s*machine/
-          if (re.test(stdout)) {
+          const re1 = /Successfully\s*installed\s*machine/,
+                re2 = /machine.*already\s*installed/
+          console.log("stdout:", stdout)
+          if (re1.test(stdout)) {
             vscode.window.showInformationMessage(`machine库${hint}成功`)
-          } else vscode.window.showErrorMessage(`machine库${hint}失败\nstderr:${stderr}`)
+          } else if (re2.test(stdout)){}
+          else vscode.window.showWarningMessage(`machine库${hint}异常\nstderr:${stderr}`)
         }
       })
     }

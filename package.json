@@ -42,6 +42,10 @@
       {
         "command": "cfdsx.setup",
         "title": "初始化cfdsx扩展"
+      },
+      {
+        "command": "cfdsx.openApiDoc",
+        "title": "文档说明(machine)"
       }
     ],
     "menus": {
@@ -57,6 +61,35 @@
           "when": "resourceLangId == python && editorFocus",
           "command": "cfdsx.uploadFile",
           "group": "navigation@1"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "cfdsx-example",
+          "title": "示例代码",
+          "icon": "./src/img/example.png"
+        }
+      ]
+    },
+    "views": {
+      "cfdsx-example": [
+        {
+          "id": "e0",
+          "name": "硬件基础"
+        },
+        {
+          "id": "e1",
+          "name": "传感器"
+        },
+        {
+          "id": "e2",
+          "name": "人工智能"
+        },
+        {
+          "id": "e3",
+          "name": "通讯"
         }
       ]
     },
